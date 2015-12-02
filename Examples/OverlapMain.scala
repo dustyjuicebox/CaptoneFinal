@@ -12,7 +12,7 @@ import scala.util.control.Breaks._
 import scala.io.Source
 
 
-object typhoon{
+object overlapper{
 
   val usage = """
     Usage: overlapper fileName
@@ -111,12 +111,6 @@ object typhoon{
     println(s"====================================================")
     println(s"Find Overlaps: done
 
-    // transtivie edge reduction
-    // val transitiveEdgeReductionGraph: Graph[Int, String] = TransitiveEdgeReduction(dotGraph, debug)
-    val transitiveEdgeReductionGraph = TransitiveEdgeReduction(dotGraph, debug)
-
-    // composite edge contraction
-    val compositeEdgeContractionGraph = CompositeEdgeContraction(transitiveEdgeReductionGraph, debug)
   }
 
 
