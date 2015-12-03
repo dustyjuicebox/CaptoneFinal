@@ -5,8 +5,6 @@ import org.apache.spark.SparkContext._
 
 import org.apache.spark.rdd.RDD
 
-import org.apache.spark.graphx._
-import org.apache.spark.graphx
 
 import scala.util.control.Breaks._
 import scala.io.Source
@@ -41,7 +39,19 @@ object overlapper{
 
     // Intialize readsListFile
     // val readsListFile = "10reads_forward.fasta"
+    def makeSubStr(k:string) : ArrayBuffer[String] = {
+    	val substrings = ArrayBuffer[String]
+    	for {start <- 0 to k.length; end <- (start + 25) to s.length} yield //loop over all possible substrings of length 25 or greater
+    	substrings += k.substring(start, end) //append the substring
+	 return substrings
+    }
     val readsListFile = sc.textFile(args(0))
+    //turn into key value RDD where the read is the key and the number of the read is the value (ATCG, 1)
+    val keyRDD = readsListFile.map(line => (line.split(" ")(1), line.split(" ")(0))
+    //Now we need to generate a rdd for every K, V that is of type (SubString K, V) for every substring of at least len 25
+    val Substrings = keyRDD.flatMap(read: (String, Int) => (read._1.makeSubStr))
+    //Then simply group by key and filter for values with len of 2 or more
+    val overlaps = Substrings.groupByKey().filter(reads =>  reads.length >= 2)
 	
 	//val source = the number of the source
 	//val destination = the number of the destination
@@ -56,46 +66,6 @@ object overlapper{
 	var reads : Array[String] = new Array[String](10)
 	var readsInd = 0
 	var done = 0
-	
-
-    // Load reads into spark rdd
-	for (line <- Source.fromFile(readsListFile).getLines()) {
-		if line !startsWith(">"){
-			reads(readsInd) = line
-			readsInd++
-		}
-	}
-	for (firstRead <- 0 until reads.length){
-		for (secondRead <- 0 until reads.length){
-			if !(firstRead == secondRead){ //makes sure were not comparing the same read
-				firstArray = reads(firstSeq).toCharArray
-				secondArray = reads(secondSeq).toCharArray
-				for (firstChar <- 0 until firstArray.length){\
-					var tempOverlapLen = 0
-					if ((firstChar + 26 ) <= 35){ //The potential overlap is len 25 or greater
-						i = firstChar
-						for(secondChar <- 0 until secondArray.length){
-							if(secondArray(secondChar) == firstArray(firstChar)){
-								i++
-								tempOverlapLen++
-								destEnd = secondChar	
-							}
-						}
-					if (tempOverlapLen >= 25){
-						overlapLen = tempOverlapLen
-						sourceStart = firstChar
-						sourceEnd = firstChar + overlapLen
-						destStart = destEnd - overlapLen
-						done = 1
-					}
-					
-					if(done == 1) break
-					}
-				}
-			}
-		}
-	}
-
 // edge has 9 attributes Ex) 3,F,33,0,0,2,34,0,32
 // Col1: overlap orientation
 // 0 = u<--------<v      reverse of u to reverse of v  
